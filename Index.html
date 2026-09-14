@@ -1,103 +1,1159 @@
-from pathlib import Path
-import zipfile
 
-root = Path("/mnt/data/GenZedits")
-root.mkdir(parents=True, exist_ok=True)
-
-html = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="GenZedits — discover AI-generated images and copy the prompts that inspired them.">
-<title>GenZedits — AI Images & Prompts</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#07070b;--panel:#111119;--panel2:#171722;--text:#f7f7fb;--muted:#a7a7b5;--line:#292936;--accent:#9b5cff;--accent2:#00e5ff}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% -10%,#32145c 0,transparent 30%),var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
-nav{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 6%;border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(14px);position:sticky;top:0;background:rgba(7,7,11,.75);z-index:5}
-.logo{font-weight:800;font-size:22px;letter-spacing:-.7px}.logo span{color:var(--accent)}
-nav a{color:#ddd;text-decoration:none;margin-left:25px;font-size:14px}.btn{background:linear-gradient(135deg,var(--accent),#6e38ff);padding:11px 17px;border-radius:12px;color:#fff!important;font-weight:700}
-.hero{text-align:center;padding:90px 20px 55px;max-width:900px;margin:auto}.badge{display:inline-block;padding:8px 12px;border:1px solid #39324c;border-radius:999px;color:#d6c6ff;background:#161023;font-size:12px;font-weight:600}
-h1{font-size:clamp(46px,8vw,82px);line-height:.98;letter-spacing:-4px;margin:20px 0 18px}.gradient{background:linear-gradient(90deg,#fff,#b76cff,#00e5ff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{color:var(--muted);font-size:18px;line-height:1.7;max-width:650px;margin:0 auto 28px}
-.search{max-width:650px;margin:0 auto;display:flex;background:#11111a;border:1px solid #30303c;border-radius:15px;padding:7px}.search input{flex:1;background:transparent;border:0;outline:0;color:white;padding:13px;font-size:15px}.search button{border:0;border-radius:10px;padding:0 20px;background:#fff;color:#08080c;font-weight:800;cursor:pointer}
-.wrap{max-width:1180px;margin:auto;padding:30px 20px 80px}.chips{display:flex;gap:10px;overflow:auto;padding:8px 0 25px}.chip{white-space:nowrap;border:1px solid var(--line);background:#101018;color:#ccc;border-radius:999px;padding:9px 14px;cursor:pointer}.chip.active,.chip:hover{background:#21143a;border-color:#6d42a7;color:#fff}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.card{background:linear-gradient(180deg,#111119,#0d0d13);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:.2s}.card:hover{transform:translateY(-4px);border-color:#4b3b62}.pic{aspect-ratio:4/5;background:#20202b;overflow:hidden}.pic img{width:100%;height:100%;object-fit:cover;display:block}.body{padding:16px}.tag{font-size:11px;color:#c5a8ff;text-transform:uppercase;letter-spacing:.8px}.body h3{margin:7px 0;font-size:17px}.prompt{color:#aaaaba;font-size:13px;line-height:1.55;min-height:62px}.copy{width:100%;margin-top:12px;padding:11px;border:1px solid #3a3a48;background:#171722;color:#fff;border-radius:10px;cursor:pointer;font-weight:700}.copy:hover{background:#242433}
-.empty{text-align:center;color:#777;padding:50px;display:none}.about{margin-top:60px;padding:35px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg,#11111b,#0c0c11)}.about h2{margin-top:0}.about p{color:var(--muted);line-height:1.7}
-footer{border-top:1px solid var(--line);padding:30px 6%;color:#777;text-align:center;font-size:13px}
-.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;padding:11px 16px;border-radius:10px;font-weight:700;opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:580px){nav a:not(.btn){display:none}.grid{grid-template-columns:1fr 1fr;gap:12px}.body{padding:12px}.prompt{font-size:12px}.hero{padding-top:65px}h1{letter-spacing:-2.5px}.search button{padding:0 14px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="GenZedits — discover AI image inspiration and copy the prompts behind the visuals."
+  >
+
+  <meta name="theme-color" content="#07070b">
+
+  <title>GenZedits — AI Images & Prompts</title>
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    /* =========================
+       RESET & VARIABLES
+    ========================== */
+
+    :root {
+      --bg: #07070b;
+      --panel: #111119;
+      --panel-light: #171722;
+      --text: #f7f7fb;
+      --muted: #a7a7b5;
+      --line: #292936;
+
+      --purple: #9b5cff;
+      --purple-dark: #6e38ff;
+      --cyan: #00e5ff;
+
+      --max-width: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at 80% -10%,
+          #32145c 0,
+          transparent 30%
+        ),
+        var(--bg);
+
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    /* =========================
+       NAVIGATION
+    ========================== */
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+
+      height: 72px;
+      padding: 0 6%;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      background: rgba(7, 7, 11, 0.78);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.7px;
+      text-decoration: none;
+    }
+
+    .logo span {
+      color: var(--purple);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+    }
+
+    .nav-links a {
+      color: #ddd;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: white;
+    }
+
+    .nav-button {
+      padding: 11px 17px;
+      border-radius: 12px;
+
+      background: linear-gradient(
+        135deg,
+        var(--purple),
+        var(--purple-dark)
+      );
+
+      color: white !important;
+      font-weight: 700;
+    }
+
+    /* =========================
+       HERO
+    ========================== */
+
+    .hero {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 90px 20px 55px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+
+      padding: 8px 12px;
+
+      border: 1px solid #39324c;
+      border-radius: 999px;
+
+      background: #161023;
+      color: #d6c6ff;
+
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      margin: 20px 0 18px;
+
+      font-size: clamp(46px, 8vw, 82px);
+      line-height: 0.98;
+      letter-spacing: -4px;
+    }
+
+    .gradient {
+      background: linear-gradient(
+        90deg,
+        #ffffff,
+        #b76cff,
+        var(--cyan)
+      );
+
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-description {
+      max-width: 650px;
+      margin: 0 auto 28px;
+
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    /* =========================
+       SEARCH
+    ========================== */
+
+    .search-box {
+      max-width: 650px;
+      margin: 0 auto;
+
+      display: flex;
+
+      padding: 7px;
+
+      background: #11111a;
+      border: 1px solid #30303c;
+      border-radius: 15px;
+    }
+
+    .search-box input {
+      flex: 1;
+
+      min-width: 0;
+
+      padding: 13px;
+
+      background: transparent;
+      border: 0;
+      outline: none;
+
+      color: white;
+      font-size: 15px;
+    }
+
+    .search-box input::placeholder {
+      color: #777783;
+    }
+
+    .search-box button {
+      padding: 0 20px;
+
+      border: 0;
+      border-radius: 10px;
+
+      background: white;
+      color: #08080c;
+
+      font-weight: 800;
+      transition: transform 0.2s ease;
+    }
+
+    .search-box button:hover {
+      transform: scale(1.03);
+    }
+
+    /* =========================
+       MAIN
+    ========================== */
+
+    .wrap {
+      width: min(var(--max-width), 100%);
+      margin: 0 auto;
+
+      padding: 30px 20px 80px;
+    }
+
+    /* =========================
+       CATEGORY BUTTONS
+    ========================== */
+
+    .chips {
+      display: flex;
+      gap: 10px;
+
+      overflow-x: auto;
+
+      padding: 8px 0 25px;
+
+      scrollbar-width: none;
+    }
+
+    .chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      flex-shrink: 0;
+
+      padding: 9px 14px;
+
+      border: 1px solid var(--line);
+      border-radius: 999px;
+
+      background: #101018;
+      color: #ccc;
+
+      transition: all 0.2s ease;
+    }
+
+    .chip:hover,
+    .chip.active {
+      background: #21143a;
+      border-color: #6d42a7;
+      color: white;
+    }
+
+    /* =========================
+       IMAGE GRID
+    ========================== */
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    /* =========================
+       CARD
+    ========================== */
+
+    .card {
+      overflow: hidden;
+
+      background: linear-gradient(
+        180deg,
+        #111119,
+        #0d0d13
+      );
+
+      border: 1px solid var(--line);
+      border-radius: 18px;
+
+      transition:
+        transform 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #4b3b62;
+    }
+
+    .image-container {
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      background: #20202b;
+    }
+
+    .image-container img {
+      display: block;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      transition: transform 0.35s ease;
+    }
+
+    .card:hover .image-container img {
+      transform: scale(1.04);
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    .category {
+      color: #c5a8ff;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .card-title {
+      margin: 7px 0;
+
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .prompt {
+      min-height: 62px;
+
+      color: #aaaaba;
+
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .copy-button {
+      width: 100%;
+
+      margin-top: 12px;
+      padding: 11px;
+
+      border: 1px solid #3a3a48;
+      border-radius: 10px;
+
+      background: #171722;
+      color: white;
+
+      font-weight: 700;
+
+      transition: background 0.2s ease;
+    }
+
+    .copy-button:hover {
+      background: #242433;
+    }
+
+    .copy-button.copied {
+      background: #243d2e;
+      border-color: #3e8b59;
+    }
+
+    /* =========================
+       EMPTY STATE
+    ========================== */
+
+    .empty {
+      display: none;
+
+      padding: 60px 20px;
+
+      color: #777;
+      text-align: center;
+    }
+
+    /* =========================
+       ABOUT
+    ========================== */
+
+    .about {
+      margin-top: 60px;
+      padding: 35px;
+
+      background: linear-gradient(
+        135deg,
+        #11111b,
+        #0c0c11
+      );
+
+      border: 1px solid var(--line);
+      border-radius: 22px;
+    }
+
+    .about h2 {
+      margin-bottom: 12px;
+
+      font-size: 28px;
+    }
+
+    .about p {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* =========================
+       FOOTER
+    ========================== */
+
+    footer {
+      padding: 30px 6%;
+
+      border-top: 1px solid var(--line);
+
+      color: #777;
+
+      text-align: center;
+      font-size: 13px;
+    }
+
+    /* =========================
+       TOAST
+    ========================== */
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 25px;
+      z-index: 200;
+
+      padding: 11px 16px;
+
+      background: white;
+      color: #111;
+
+      border-radius: 10px;
+
+      font-weight: 700;
+
+      opacity: 0;
+      pointer-events: none;
+
+      transform: translateX(-50%) translateY(20px);
+
+      transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* =========================
+       TABLET
+    ========================== */
+
+    @media (max-width: 850px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* =========================
+       MOBILE
+    ========================== */
+
+    @media (max-width: 580px) {
+      nav {
+        height: 64px;
+        padding: 0 18px;
+      }
+
+      .logo {
+        font-size: 19px;
+      }
+
+      .nav-links {
+        gap: 8px;
+      }
+
+      .nav-links a:not(.nav-button) {
+        display: none;
+      }
+
+      .nav-button {
+        padding: 9px 12px;
+        font-size: 12px;
+      }
+
+      .hero {
+        padding: 65px 18px 45px;
+      }
+
+      .hero h1 {
+        letter-spacing: -2.5px;
+      }
+
+      .hero-description {
+        font-size: 16px;
+      }
+
+      .search-box {
+        padding: 6px;
+      }
+
+      .search-box input {
+        padding: 11px 9px;
+        font-size: 14px;
+      }
+
+      .search-box button {
+        padding: 0 14px;
+      }
+
+      .wrap {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .card-body {
+        padding: 12px;
+      }
+
+      .card-title {
+        font-size: 15px;
+      }
+
+      .prompt {
+        min-height: auto;
+        font-size: 12px;
+      }
+
+      .copy-button {
+        padding: 10px 6px;
+        font-size: 12px;
+      }
+
+      .about {
+        padding: 25px 20px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<nav>
-  <div class="logo">GenZ<span>edits</span> ✦</div>
-  <div><a href="#explore">Explore</a><a href="#about">About</a><a class="btn" href="#explore">Explore Prompts</a></div>
-</nav>
 
-<header class="hero">
-  <div class="badge">✦ AI IMAGE INSPIRATION</div>
-  <h1>See it. <span class="gradient">Prompt it.</span></h1>
-  <p>Discover eye-catching AI-generated images and the prompts behind them. Find inspiration, copy a prompt, and create your own.</p>
-  <div class="search">
-    <input id="search" placeholder="Search images, styles or prompts..." aria-label="Search">
-    <button onclick="filterCards()">Search</button>
+  <!-- =========================
+       NAVIGATION
+  ========================== -->
+
+  <nav>
+    <a href="#" class="logo">
+      GenZ<span>edits</span> ✦
+    </a>
+
+    <div class="nav-links">
+      <a href="#explore">Explore</a>
+      <a href="#about">About</a>
+      <a href="#explore" class="nav-button">
+        Explore Prompts
+      </a>
+    </div>
+  </nav>
+
+
+  <!-- =========================
+       HERO
+  ========================== -->
+
+  <header class="hero">
+
+    <div class="badge">
+      ✦ AI IMAGE INSPIRATION
+    </div>
+
+    <h1>
+      See it.
+      <span class="gradient">Prompt it.</span>
+    </h1>
+
+    <p class="hero-description">
+      Discover eye-catching AI image inspiration and the prompts behind
+      the visuals. Find inspiration, copy a prompt, and create your own.
+    </p>
+
+    <form class="search-box" id="searchForm">
+
+      <input
+        id="search"
+        type="search"
+        placeholder="Search images, styles or prompts..."
+        aria-label="Search images, styles or prompts"
+        autocomplete="off"
+      >
+
+      <button type="submit">
+        Search
+      </button>
+
+    </form>
+
+  </header>
+
+
+  <!-- =========================
+       MAIN CONTENT
+  ========================== -->
+
+  <main class="wrap" id="explore">
+
+    <!-- CATEGORY FILTERS -->
+
+    <div class="chips" id="chips">
+
+      <button
+        class="chip active"
+        type="button"
+        data-category="All"
+      >
+        All
+      </button>
+
+      <button
+        class="chip"
+        type="button"
+        data-category="Portrait"
+      >
+        Portraits
+      </button>
+
+      <button
+        class="chip"
+        type="button"
+        data-category="Cinematic"
+      >
+        Cinematic
+      </button>
+
+      <button
+        class="chip"
+        type="button"
+        data-category="Anime"
+      >
+        Anime
+      </button>
+
+      <button
+        class="chip"
+        type="button"
+        data-category="Fantasy"
+      >
+        Fantasy
+      </button>
+
+      <button
+        class="chip"
+        type="button"
+        data-category="Aesthetic"
+      >
+        Aesthetic
+      </button>
+
+    </div>
+
+
+    <!-- IMAGE CARDS -->
+
+    <section
+      class="grid"
+      id="grid"
+      aria-live="polite"
+    ></section>
+
+
+    <!-- NO RESULTS -->
+
+    <div
+      class="empty"
+      id="empty"
+    >
+      <h3>No matching prompts found.</h3>
+      <p>Try another search or category.</p>
+    </div>
+
+
+    <!-- =========================
+         ABOUT
+    ========================== -->
+
+    <section
+      class="about"
+      id="about"
+    >
+
+      <h2>About GenZedits</h2>
+
+      <p>
+        GenZedits is a simple showcase for AI image ideas and reusable
+        prompts. Explore different visual styles, discover inspiration,
+        and copy prompts to experiment with your own AI creations.
+      </p>
+
+    </section>
+
+  </main>
+
+
+  <!-- =========================
+       FOOTER
+  ========================== -->
+
+  <footer>
+    © <span id="year"></span> GenZedits · AI image inspiration
+  </footer>
+
+
+  <!-- COPY TOAST -->
+
+  <div
+    class="toast"
+    id="toast"
+    role="status"
+    aria-live="polite"
+  >
+    Prompt copied ✓
   </div>
-</header>
 
-<main class="wrap" id="explore">
-  <div class="chips" id="chips">
-    <button class="chip active" data-cat="All">All</button>
-    <button class="chip" data-cat="Portrait">Portraits</button>
-    <button class="chip" data-cat="Cinematic">Cinematic</button>
-    <button class="chip" data-cat="Anime">Anime</button>
-    <button class="chip" data-cat="Fantasy">Fantasy</button>
-    <button class="chip" data-cat="Aesthetic">Aesthetic</button>
-  </div>
-  <section class="grid" id="grid"></section>
-  <div class="empty" id="empty">No matching prompts found. Try another search.</div>
 
-  <section class="about" id="about">
-    <h2>About GenZedits</h2>
-    <p>GenZedits is a simple showcase for AI image ideas and reusable prompts. This starter version includes sample cards and a working search, category filter, and copy-prompt button. Replace the sample images and prompts with your own collection.</p>
-  </section>
-</main>
+  <!-- =========================
+       JAVASCRIPT
+  ========================== -->
 
-<footer>© 2026 GenZedits · AI image inspiration</footer>
-<div class="toast" id="toast">Prompt copied ✓</div>
+  <script>
 
-<script>
-const items=[
- {cat:"Portrait",title:"Neon Street Portrait",img:"https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=85",prompt:"Ultra-realistic cinematic portrait, neon city lights, rainy street reflections, shallow depth of field, detailed skin, 85mm lens, moody atmosphere."},
- {cat:"Cinematic",title:"Golden Hour Journey",img:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=85",prompt:"Cinematic wide shot at golden hour, lone traveler on a mountain ridge, dramatic clouds, warm sunlight, atmospheric haze, film still, high detail."},
- {cat:"Fantasy",title:"Enchanted Forest",img:"https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=900&q=85",prompt:"Mystical enchanted forest, glowing particles, ancient trees, soft moonlight, magical mist, fantasy concept art, rich atmosphere, ultra detailed."},
- {cat:"Aesthetic",title:"Minimal Coffee Mood",img:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85",prompt:"Cozy minimalist coffee scene, soft morning window light, neutral tones, editorial photography, subtle shadows, clean composition, premium lifestyle aesthetic."},
- {cat:"Anime",title:"Anime City Night",img:"https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=900&q=85",prompt:"Anime-inspired futuristic city at night, glowing signs, reflective pavement, expressive character silhouette, vibrant atmosphere, detailed background."},
- {cat:"Cinematic",title:"Retro Film Frame",img:"https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=900&q=85",prompt:"Retro 35mm film photography, cinematic composition, soft grain, muted highlights, nostalgic mood, natural light, authentic analog texture."}
-];
-let active="All";
-function render(){
- const q=document.getElementById("search").value.toLowerCase().trim();
- const list=items.filter(x=>(active==="All"||x.cat===active)&&(!q||(x.title+" "+x.cat+" "+x.prompt).toLowerCase().includes(q)));
- document.getElementById("grid").innerHTML=list.map((x,i)=>`
- <article class="card"><div class="pic"><img src="${x.img}" alt="${x.title}" loading="lazy"></div>
- <div class="body"><div class="tag">${x.cat}</div><h3>${x.title}</h3><div class="prompt">${x.prompt}</div>
- <button class="copy" onclick="copyPrompt(${items.indexOf(x)})">Copy Prompt</button></div></article>`).join("");
- document.getElementById("empty").style.display=list.length?"none":"block";
-}
-function filterCards(){render()}
-function copyPrompt(i){navigator.clipboard.writeText(items[i].prompt).then(()=>{const t=document.getElementById("toast");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1500)})}
-document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");active=b.dataset.cat;render()});
-document.getElementById("search").addEventListener("input",render);render();
-</script>
+    /* =========================
+       WEBSITE DATA
+
+       You can add more images here.
+    ========================== */
+
+    const items = [
+
+      {
+        category: "Portrait",
+        title: "Neon Street Portrait",
+
+        image:
+          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=85",
+
+        prompt:
+          "Ultra-realistic cinematic portrait, neon city lights, rainy street reflections, shallow depth of field, detailed skin, 85mm lens, moody atmosphere."
+      },
+
+      {
+        category: "Cinematic",
+        title: "Golden Hour Journey",
+
+        image:
+          "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=85",
+
+        prompt:
+          "Cinematic wide shot at golden hour, lone traveler on a mountain ridge, dramatic clouds, warm sunlight, atmospheric haze, film still, high detail."
+      },
+
+      {
+        category: "Fantasy",
+        title: "Enchanted Forest",
+
+        image:
+          "https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=900&q=85",
+
+        prompt:
+          "Mystical enchanted forest, glowing particles, ancient trees, soft moonlight, magical mist, fantasy concept art, rich atmosphere, ultra detailed."
+      },
+
+      {
+        category: "Aesthetic",
+        title: "Minimal Coffee Mood",
+
+        image:
+          "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85",
+
+        prompt:
+          "Cozy minimalist coffee scene, soft morning window light, neutral tones, editorial photography, subtle shadows, clean composition, premium lifestyle aesthetic."
+      },
+
+      {
+        category: "Anime",
+        title: "Anime City Night",
+
+        image:
+          "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=900&q=85",
+
+        prompt:
+          "Anime-inspired futuristic city at night, glowing signs, reflective pavement, expressive character silhouette, vibrant atmosphere, detailed background."
+      },
+
+      {
+        category: "Cinematic",
+        title: "Retro Film Frame",
+
+        image:
+          "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=900&q=85",
+
+        prompt:
+          "Retro 35mm film photography, cinematic composition, soft grain, muted highlights, nostalgic mood, natural light, authentic analog texture."
+      }
+
+    ];
+
+
+    /* =========================
+       STATE
+    ========================== */
+
+    let activeCategory = "All";
+
+
+    /* =========================
+       ELEMENTS
+    ========================== */
+
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    const searchInput = document.getElementById("search");
+    const searchForm = document.getElementById("searchForm");
+    const toast = document.getElementById("toast");
+    const chips = document.querySelectorAll(".chip");
+
+
+    /* =========================
+       RENDER CARDS
+    ========================== */
+
+    function renderCards() {
+
+      const query = searchInput.value
+        .toLowerCase()
+        .trim();
+
+      const filteredItems = items.filter(item => {
+
+        const matchesCategory =
+          activeCategory === "All" ||
+          item.category === activeCategory;
+
+        const searchableText =
+          `${item.title} ${item.category} ${item.prompt}`
+            .toLowerCase();
+
+        const matchesSearch =
+          !query ||
+          searchableText.includes(query);
+
+        return matchesCategory && matchesSearch;
+
+      });
+
+
+      /* Clear existing cards */
+
+      grid.innerHTML = "";
+
+
+      /* No results */
+
+      if (filteredItems.length === 0) {
+
+        empty.style.display = "block";
+
+        return;
+
+      }
+
+      empty.style.display = "none";
+
+
+      /* Create cards */
+
+      filteredItems.forEach((item, index) => {
+
+        const card = document.createElement("article");
+
+        card.className = "card";
+
+        card.innerHTML = `
+
+          <div class="image-container">
+
+            <img
+              src="${item.image}"
+              alt="${item.title}"
+              loading="lazy"
+            >
+
+          </div>
+
+          <div class="card-body">
+
+            <div class="category">
+              ${item.category}
+            </div>
+
+            <h3 class="card-title">
+              ${item.title}
+            </h3>
+
+            <div class="prompt">
+              ${item.prompt}
+            </div>
+
+            <button
+              class="copy-button"
+              type="button"
+              data-index="${items.indexOf(item)}"
+            >
+              Copy Prompt
+            </button>
+
+          </div>
+
+        `;
+
+        grid.appendChild(card);
+
+      });
+
+    }
+
+
+    /* =========================
+       COPY PROMPT
+    ========================== */
+
+    async function copyPrompt(index, button) {
+
+      const prompt = items[index].prompt;
+
+      try {
+
+        await navigator.clipboard.writeText(prompt);
+
+        showToast("Prompt copied ✓");
+
+        button.textContent = "Copied ✓";
+        button.classList.add("copied");
+
+        setTimeout(() => {
+
+          button.textContent = "Copy Prompt";
+          button.classList.remove("copied");
+
+        }, 1500);
+
+      } catch (error) {
+
+        /*
+          Fallback for browsers where
+          Clipboard API is unavailable.
+        */
+
+        const textarea = document.createElement("textarea");
+
+        textarea.value = prompt;
+
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+
+        document.body.appendChild(textarea);
+
+        textarea.focus();
+        textarea.select();
+
+        try {
+          document.execCommand("copy");
+          showToast("Prompt copied ✓");
+        } catch (fallbackError) {
+          showToast("Please copy the prompt manually.");
+        }
+
+        document.body.removeChild(textarea);
+
+      }
+
+    }
+
+
+    /* =========================
+       TOAST
+    ========================== */
+
+    let toastTimer;
+
+    function showToast(message) {
+
+      toast.textContent = message;
+
+      toast.classList.add("show");
+
+      clearTimeout(toastTimer);
+
+      toastTimer = setTimeout(() => {
+
+        toast.classList.remove("show");
+
+      }, 1800);
+
+    }
+
+
+    /* =========================
+       CATEGORY FILTER
+    ========================== */
+
+    chips.forEach(chip => {
+
+      chip.addEventListener("click", () => {
+
+        chips.forEach(button => {
+          button.classList.remove("active");
+        });
+
+        chip.classList.add("active");
+
+        activeCategory =
+          chip.dataset.category;
+
+        renderCards();
+
+      });
+
+    });
+
+
+    /* =========================
+       SEARCH
+    ========================== */
+
+    searchInput.addEventListener(
+      "input",
+      renderCards
+    );
+
+
+    searchForm.addEventListener(
+      "submit",
+      event => {
+
+        event.preventDefault();
+
+        renderCards();
+
+      }
+    );
+
+
+    /* =========================
+       COPY BUTTON EVENT
+    ========================== */
+
+    grid.addEventListener("click", event => {
+
+      const button =
+        event.target.closest(".copy-button");
+
+      if (!button) {
+        return;
+      }
+
+      const index =
+        Number(button.dataset.index);
+
+      copyPrompt(index, button);
+
+    });
+
+
+    /* =========================
+       CURRENT YEAR
+    ========================== */
+
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+
+
+    /* =========================
+       INITIAL LOAD
+    ========================== */
+
+    renderCards();
+
+  </script>
+
 </body>
-</html>'''
-
-(root/"index.html").write_text(html, encoding="utf-8")
-zip_path=Path("/mnt/data/GenZedits-website.zip")
-with zipfile.ZipFile(zip_path,"w",zipfile.ZIP_DEFLATED) as z:
-    z.write(root/"index.html","index.html")
-print(f"Created: {zip_path}")
+</html>
